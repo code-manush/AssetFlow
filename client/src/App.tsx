@@ -7,6 +7,11 @@ import AppLayout from './components/layout/AppLayout';
 // Pages
 import LoginPage from './pages/LoginPage';
 import Dashboard from './pages/Dashboard';
+import AssetsPage       from './pages/AssetsPage';
+import AssetDetailPage  from './pages/AssetDetailPage';
+import AllocationPage   from './pages/Allocation';
+import MaintenancePage  from './pages/Maintenance';
+import ResourceBooking  from './pages/ResourceBooking';
 
 
 export default function App() {
@@ -22,6 +27,12 @@ export default function App() {
             <Route element={<AppLayout />}>
               <Route index element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard" element={<Dashboard />} />
+              
+              <Route path="/assets"     element={<AssetsPage />} />
+              <Route path="/assets/:id" element={<AssetDetailPage />} />
+              <Route path="/allocation" element={<AllocationPage />} />
+              <Route path="/maintenance"element={<MaintenancePage />} />
+              <Route path="/booking"    element={<ResourceBooking />} />
 
             </Route>
 
