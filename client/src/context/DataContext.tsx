@@ -2,10 +2,12 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 // Re-using types from mockData (we can import them or redefine)
 import type { Asset, AllocationRecord, MaintenanceRequest, Booking, User, Department } from '../data/mockData';
+import { apiFetch } from '../lib/api';
 
 interface DataContextType {
   assets: Asset[];
   allocations: AllocationRecord[];
+  transfers: any[];
   maintenance: MaintenanceRequest[];
   bookings: Booking[];
   users: User[];
@@ -31,6 +33,7 @@ export const useData = () => {
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [allocations, setAllocations] = useState<AllocationRecord[]>([]);
+  const [transfers, setTransfers] = useState<any[]>([]);
   const [maintenance, setMaintenance] = useState<MaintenanceRequest[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -40,19 +43,22 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const refreshData = async () => {
     setLoading(true);
     try {
-      const [ass, all, main, book, usr] = await Promise.all([
-        fetch('http://localhost:5000/api/assets').then(r => r.json()),
-        fetch('http://localhost:5000/api/allocations').then(r => r.json()),
-        fetch('http://localhost:5000/api/maintenance').then(r => r.json()),
-        fetch('http://localhost:5000/api/bookings').then(r => r.json()),
-        fetch('http://localhost:5000/api/users').then(r => r.json()),
+      const [ass, all, trans, main, book, usr, depts] = await Promise.all([
+        apiFetch('/assets'),
+        apiFetch('/allocations'),
+        apiFetch('/transfers'),
+        apiFetch('/maintenance'),
+        apiFetch('/bookings'),
+        apiFetch('/users'),
+        apiFetch('/users/departments'),
       ]);
       setAssets(ass || []);
       setAllocations(all || []);
+      setTransfers(trans || []);
       setMaintenance(main || []);
       setBookings(book || []);
       setUsers(usr || []);
-      // Optional: if departments API exists, fetch it too.
+      setDepartments(depts || []);
     } catch (e) {
       console.error("Failed to load data", e);
     } finally {
@@ -88,7 +94,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   return (
     <DataContext.Provider value={{
-      assets, allocations, maintenance, bookings, users, departments,
+      assets, allocations, transfers, maintenance, bookings, users, departments,
       loading, refreshData, getUserById, getAssetById, getDeptById,
       categoryBreakdown, monthlyAssetData, maintenanceTrend
     }}>

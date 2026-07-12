@@ -1,5 +1,5 @@
 import { OllamaProvider } from '../provider/ollama';
-import { SYSTEM_PROMPT } from '../prompts/systemPrompt';
+import { getSystemPrompt } from '../prompts/systemPrompt';
 import { Plan, Tool } from '../types';
 import { parsePlan } from './parser';
 
@@ -10,15 +10,27 @@ export class Planner {
     this.provider = new OllamaProvider();
   }
 
-  async createPlan(query: string, availableTools: Tool[], history: string): Promise<Plan> {
-    const toolsDescription = availableTools.map(t => 
-      `- ${t.name}: ${t.description} \n  Parameters: ${JSON.stringify(t.parameters)}`
-    ).join('\n');
+  async createPlan(query: string, availableTools: Tool[], history: string, userRole: string): Promise<Plan> {
+    const toolsDescription = availableTools.map(t =>
+      `Tool: ${t.name}\n  Description: ${t.description}\n  Parameters: ${JSON.stringify(t.parameters)}`
+    ).join('\n\n');
 
-    const prompt = `${SYSTEM_PROMPT}\n\nAvailable tools:\n${toolsDescription}\n\nConversation History:\n${history}\n\nUser Query: "${query}"\n\nPlease output the Workflow in JSON format containing Planning, Tool_selection, Implementation, Output, and an optional Tool_calls array with { name, arguments }.`;
+    const prompt = `${getSystemPrompt(userRole)}
 
-    const responseText = await this.provider.generate(prompt);
-    
+## AVAILABLE TOOLS
+${toolsDescription}
+
+## CONVERSATION HISTORY
+${history || 'No prior conversation.'}
+
+## USER QUERY
+"${query}"
+
+Respond ONLY with valid JSON. No explanation. No markdown. No code fences. Just the raw JSON object.`;
+
+    const responseText = await this.provider.generate(prompt, { temperature: 0.1 });
+    console.log('[AI RAW RESPONSE]', responseText.substring(0, 500));
+
     try {
       return parsePlan(responseText);
     } catch (e) {

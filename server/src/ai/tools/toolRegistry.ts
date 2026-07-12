@@ -14,6 +14,10 @@ export class ToolRegistry {
   getAllTools(): Tool[] {
     return Array.from(this.tools.values());
   }
+
+  clearTools(): void {
+    this.tools.clear();
+  }
 }
 
 export const registry = new ToolRegistry();

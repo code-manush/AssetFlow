@@ -1,35 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Zap, Shield, User, Settings, ArrowRight, Package, BarChart3, Wrench, Sparkles } from 'lucide-react';
+import { Zap, Package, BarChart3, Wrench, Sparkles, LogIn } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { users } from '../data/mockData';
-
-const ROLES = [
-  {
-    userId: 'u1',
-    label: 'Admin',
-    desc: 'Full system access',
-    icon: <Shield size={18} />,
-    color: '#6366F1',
-    bg: 'rgba(99,102,241,0.12)',
-  },
-  {
-    userId: 'u2',
-    label: 'Asset Manager',
-    desc: 'Manage & allocate assets',
-    icon: <Settings size={18} />,
-    color: '#14B8A6',
-    bg: 'rgba(20,184,166,0.12)',
-  },
-  {
-    userId: 'u4',
-    label: 'Employee',
-    desc: 'View & request assets',
-    icon: <User size={18} />,
-    color: '#F59E0B',
-    bg: 'rgba(245,158,11,0.12)',
-  },
-];
+import { apiFetch } from '../lib/api';
 
 const FEATURES = [
   { icon: <Package size={20} />, label: 'Asset Registry', desc: 'Track every asset lifecycle', color: '#6366F1' },
@@ -41,52 +14,49 @@ const FEATURES = [
 export default function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const [selectedRole, setSelectedRole] = useState<string>('u1');
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('alex.rivera@assetflow.io');
+  const [password, setPassword] = useState('admin123');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const selectedUser = users.find(u => u.id === selectedRole);
-
-  function handleLogin() {
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
-      login(selectedRole);
+    setError('');
+    
+    try {
+      const endpoint = isSignUp ? '/auth/signup' : '/auth/login';
+      const body = isSignUp ? { name, email, password } : { email, password };
+      const res = await apiFetch(endpoint, {
+        method: 'POST',
+        body: JSON.stringify(body)
+      });
+      login(res.token, res.user);
       navigate('/dashboard');
-    }, 600);
-  }
+    } catch (err: any) {
+      setError(err.message || 'Login failed');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="login-page">
-      {/* Background glows */}
-      <div
-        className="login-bg-glow"
-        style={{ background: 'rgba(99,102,241,0.12)', top: '-200px', left: '-200px' }}
-      />
-      <div
-        className="login-bg-glow"
-        style={{ background: 'rgba(168,85,247,0.08)', bottom: '-200px', right: '-100px' }}
-      />
+      <div className="login-bg-glow" style={{ background: 'rgba(99,102,241,0.12)', top: '-200px', left: '-200px' }} />
+      <div className="login-bg-glow" style={{ background: 'rgba(168,85,247,0.08)', bottom: '-200px', right: '-100px' }} />
 
-      {/* Left — Branding panel */}
       <div className="login-left">
         <div style={{ maxWidth: 460, width: '100%' }}>
-          {/* Logo mark */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 48 }}>
-            <div className="login-logo-icon">
-              <Zap size={22} color="white" />
-            </div>
+            <div className="login-logo-icon"><Zap size={22} color="white" /></div>
             <span className="login-logo-text">AssetFlow</span>
           </div>
 
-          <h1 style={{
-            fontSize: '2.6rem', fontWeight: 800, color: 'var(--text-primary)',
-            letterSpacing: '-0.8px', lineHeight: 1.15, marginBottom: 16,
-          }}>
+          <h1 style={{ fontSize: '2.6rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.8px', lineHeight: 1.15, marginBottom: 16 }}>
             Manage assets<br />
-            <span style={{
-              background: 'linear-gradient(135deg, #6366F1, #A855F7)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-            }}>
+            <span style={{ background: 'linear-gradient(135deg, #6366F1, #A855F7)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
               intelligently.
             </span>
           </h1>
@@ -95,28 +65,10 @@ export default function LoginPage() {
             A unified platform to track, allocate, and maintain your organization's assets — with AI-powered insights.
           </p>
 
-          {/* Feature grid */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             {FEATURES.map(f => (
-              <div
-                key={f.label}
-                style={{
-                  display: 'flex', alignItems: 'flex-start', gap: 10,
-                  padding: '14px 16px',
-                  background: 'var(--bg-card)',
-                  border: '1px solid var(--border)',
-                  borderRadius: 'var(--radius-lg)',
-                  transition: 'border-color var(--transition)',
-                }}
-                onMouseEnter={e => (e.currentTarget.style.borderColor = `${f.color}40`)}
-                onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--border)')}
-              >
-                <div style={{
-                  width: 36, height: 36, borderRadius: 'var(--radius-md)',
-                  background: `${f.color}18`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: f.color, flexShrink: 0,
-                }}>
+              <div key={f.label} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '14px 16px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)' }}>
+                <div style={{ width: 36, height: 36, borderRadius: 'var(--radius-md)', background: `${f.color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: f.color, flexShrink: 0 }}>
                   {f.icon}
                 </div>
                 <div>
@@ -129,123 +81,76 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* Right — Login panel */}
       <div className="login-right">
         <div className="login-card">
-          <h2 className="login-heading">Welcome back</h2>
-          <p className="login-subheading">
-            Select your role to sign in and explore the platform.
-          </p>
+          <h2 className="login-heading">{isSignUp ? 'Create Account' : 'Sign In'}</h2>
+          <p className="login-subheading" style={{ marginBottom: 24 }}>{isSignUp ? 'Register to join the platform' : 'Enter your credentials to access the platform.'}</p>
 
-          {/* Role selector */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24 }}>
-            {ROLES.map(role => (
-              <div
-                key={role.userId}
-                id={`role-${role.userId}`}
-                onClick={() => setSelectedRole(role.userId)}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 14,
-                  padding: '14px 16px',
-                  borderRadius: 'var(--radius-lg)',
-                  border: `1.5px solid ${selectedRole === role.userId ? role.color : 'var(--border)'}`,
-                  background: selectedRole === role.userId ? role.bg : 'var(--bg-elevated)',
-                  cursor: 'pointer',
-                  transition: 'all var(--transition)',
-                }}
-              >
-                <div style={{
-                  width: 40, height: 40, borderRadius: 'var(--radius-md)',
-                  background: selectedRole === role.userId ? role.bg : 'var(--bg-card)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: selectedRole === role.userId ? role.color : 'var(--text-muted)',
-                  border: `1px solid ${selectedRole === role.userId ? `${role.color}40` : 'var(--border)'}`,
-                  transition: 'all var(--transition)',
-                  flexShrink: 0,
-                }}>
-                  {role.icon}
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{
-                    fontSize: '0.895rem', fontWeight: 600,
-                    color: selectedRole === role.userId ? 'var(--text-primary)' : 'var(--text-secondary)',
-                  }}>
-                    {role.label}
-                  </div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 1 }}>
-                    {role.desc}
-                  </div>
-                </div>
-                {selectedRole === role.userId && (
-                  <div style={{
-                    width: 18, height: 18, borderRadius: '50%',
-                    background: role.color,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    flexShrink: 0,
-                  }}>
-                    <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-                      <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </div>
-                )}
+          {error && <div style={{ padding: 12, background: 'rgba(239,68,68,0.1)', color: '#ef4444', borderRadius: 8, marginBottom: 16, fontSize: '0.85rem' }}>{error}</div>}
+
+          <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 24 }}>
+            {isSignUp && (
+              <div>
+                <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: 6 }}>Full Name</label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  required
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-elevated)', color: 'var(--text-primary)', outline: 'none' }}
+                />
               </div>
-            ))}
+            )}
+            <div>
+              <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: 6 }}>Email Address</label>
+              <input
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                required
+                style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-elevated)', color: 'var(--text-primary)', outline: 'none' }}
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: 6 }}>Password</label>
+              <input
+                type="password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                required
+                style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-elevated)', color: 'var(--text-primary)', outline: 'none' }}
+              />
+            </div>
+            
+            <button
+              type="submit"
+              className="btn btn-primary btn-lg"
+              style={{ width: '100%', justifyContent: 'center', gap: 10, marginTop: 10 }}
+              disabled={loading}
+            >
+              {loading ? (isSignUp ? 'Creating...' : 'Signing In...') : <><LogIn size={16} /> {isSignUp ? 'Sign Up' : 'Sign In'}</>}
+            </button>
+          </form>
+
+          <div style={{ textAlign: 'center', marginBottom: 20, fontSize: '0.85rem' }}>
+            <span style={{ color: 'var(--text-secondary)' }}>
+              {isSignUp ? 'Already have an account?' : "Don't have an account?"}
+            </span>
+            <button
+              type="button"
+              onClick={() => setIsSignUp(!isSignUp)}
+              style={{ background: 'none', border: 'none', color: '#6366F1', fontWeight: 600, cursor: 'pointer', marginLeft: 8 }}
+            >
+              {isSignUp ? 'Sign In' : 'Sign Up'}
+            </button>
           </div>
 
-          {/* User info preview */}
-          {selectedUser && (
-            <div style={{
-              padding: '12px 14px', marginBottom: 20,
-              background: 'var(--bg-elevated)',
-              border: '1px solid var(--border)',
-              borderRadius: 'var(--radius-md)',
-              display: 'flex', alignItems: 'center', gap: 10,
-            }}>
-              <div style={{
-                width: 32, height: 32, borderRadius: '50%',
-                background: 'linear-gradient(135deg, #6366F1, #A855F7)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '0.72rem', fontWeight: 700, color: 'white', flexShrink: 0,
-              }}>
-                {selectedUser.name.split(' ').map(n => n[0]).join('')}
-              </div>
-              <div>
-                <div style={{ fontSize: '0.83rem', fontWeight: 600, color: 'var(--text-primary)' }}>
-                  {selectedUser.name}
-                </div>
-                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                  {selectedUser.email}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Sign in button */}
-          <button
-            id="login-btn"
-            className="btn btn-primary btn-lg"
-            style={{ width: '100%', justifyContent: 'center', gap: 10 }}
-            onClick={handleLogin}
-            disabled={loading}
-          >
-            {loading ? (
-              <svg
-                style={{ animation: 'spin 0.8s linear infinite', width: 16, height: 16 }}
-                viewBox="0 0 24 24" fill="none"
-              >
-                <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.3)" strokeWidth="3" />
-                <path d="M12 2a10 10 0 0 1 10 10" stroke="white" strokeWidth="3" strokeLinecap="round" />
-              </svg>
-            ) : (
-              <>Sign in to AssetFlow <ArrowRight size={16} /></>
-            )}
-          </button>
-
-          <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
-
-          <p style={{ fontSize: '0.73rem', color: 'var(--text-muted)', textAlign: 'center', marginTop: 20 }}>
-            This is a demo. No credentials required. Select any role above.
-          </p>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', background: 'var(--bg-elevated)', padding: 12, borderRadius: 8 }}>
+            <p style={{ marginBottom: 6, fontWeight: 600, color: 'var(--text-primary)' }}>Demo Credentials:</p>
+            <p>Admin: alex.rivera@assetflow.io / admin123</p>
+            <p>Manager: priya.sharma@assetflow.io / manager123</p>
+            <p>Employee: sara.chen@assetflow.io / employee123</p>
+          </div>
         </div>
       </div>
     </div>

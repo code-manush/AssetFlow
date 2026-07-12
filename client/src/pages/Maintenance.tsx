@@ -19,17 +19,14 @@ import {
   Activity,
 } from 'lucide-react';
 import {
-  maintenanceRequests,
-  assets,
-  users,
-  getUserById,
-  getAssetById,
   formatDate,
   MaintenanceRequest,
   MaintenancePriority,
   MaintenanceStatus,
 } from '../data/mockData';
 import { useAuth } from '../context/AuthContext';
+import { useData } from '../context/DataContext';
+import { apiFetch } from '../lib/api';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -122,6 +119,7 @@ function KanbanCardItem({
   req: LocalMaintenance;
   onClick: () => void;
 }) {
+  const { getAssetById, getUserById } = useData();
   const asset = getAssetById(req.assetId);
   const raisedByUser = getUserById(req.raisedBy);
 
@@ -177,6 +175,7 @@ interface RaiseModalProps {
 }
 
 function RaiseRequestModal({ onClose, onSubmit, currentUserId }: RaiseModalProps) {
+  const { assets } = useData();
   const [assetId, setAssetId]   = useState('');
   const [issue, setIssue]       = useState('');
   const [priority, setPriority] = useState<MaintenancePriority>('medium');
@@ -318,6 +317,7 @@ interface DetailModalProps {
 }
 
 function DetailModal({ req, onClose, onApprove, onReject, onAssign, canManage, currentUserId }: DetailModalProps) {
+  const { getAssetById, getUserById, users } = useData();
   const asset       = getAssetById(req.assetId);
   const raisedBy    = getUserById(req.raisedBy);
   const assignedTo  = req.assignedTo ? getUserById(req.assignedTo) : null;
@@ -511,7 +511,7 @@ function DetailModal({ req, onClose, onApprove, onReject, onAssign, canManage, c
 
 export default function Maintenance() {
   const { user } = useAuth();
-  const [requests, setRequests]               = useState<LocalMaintenance[]>(maintenanceRequests);
+  const { maintenance: requests, getAssetById, getUserById, refreshData } = useData();
   const [view, setView]                       = useState<'kanban' | 'table'>('kanban');
   const [search, setSearch]                   = useState('');
   const [filterPriority, setFilterPriority]   = useState<string>('all');
@@ -519,42 +519,31 @@ export default function Maintenance() {
   const [showRaiseModal, setShowRaiseModal]   = useState(false);
   const [detailReq, setDetailReq]             = useState<LocalMaintenance | null>(null);
 
-  const isManager = user?.role === 'admin' || user?.role === 'asset_manager';
+  const isManager = user?.role === 'ADMIN' || user?.role === 'ASSET_MANAGER';
   const currentUserId = user?.id ?? 'u4';
 
- 
-
-  const handleRaiseSubmit = (req: LocalMaintenance) => {
-    setRequests(prev => [req, ...prev]);
-    setShowRaiseModal(false);
+  const handleRaiseSubmit = async (req: LocalMaintenance) => {
+    try {
+      await apiFetch('/maintenance', { method: 'POST', body: JSON.stringify({ assetId: req.assetId, issue: req.issue, priority: req.priority }) });
+      setShowRaiseModal(false);
+      refreshData();
+    } catch(e: any) { alert(e.message); }
   };
 
-  const handleApprove = (id: string) => {
-    setRequests(prev =>
-      prev.map(r =>
-        r.id === id
-          ? { ...r, status: 'approved', approvedAt: new Date().toISOString(), approvedBy: currentUserId }
-          : r
-      )
-    );
+  const handleApprove = async (id: string) => {
+    try { await apiFetch(`/maintenance/${id}/approve`, { method: 'POST' }); refreshData(); } catch(e: any) { alert(e.message); }
   };
 
-  const handleReject = (id: string) => {
-    setRequests(prev =>
-      prev.map(r =>
-        r.id === id ? { ...r, status: 'rejected' } : r
-      )
-    );
+  const handleReject = async (id: string) => {
+    try { await apiFetch(`/maintenance/${id}/reject`, { method: 'POST' }); refreshData(); } catch(e: any) { alert(e.message); }
   };
 
-  const handleAssign = (id: string, techId: string) => {
-    setRequests(prev =>
-      prev.map(r =>
-        r.id === id ? { ...r, assignedTo: techId, status: 'in_progress' } : r
-      )
-    );
-   
-    setDetailReq(prev => prev && prev.id === id ? { ...prev, assignedTo: techId, status: 'in_progress' } : prev);
+  const handleAssign = async (id: string, techId: string) => {
+    try {
+      await apiFetch(`/maintenance/${id}/assign`, { method: 'POST', body: JSON.stringify({ techId }) });
+      setDetailReq(prev => prev && prev.id === id ? { ...prev, assignedTo: techId, status: 'in_progress' } : prev);
+      refreshData();
+    } catch(e: any) { alert(e.message); }
   };
 
   // ── Filtering ──────────────────────────────────────────────────────────────

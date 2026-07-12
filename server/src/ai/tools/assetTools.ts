@@ -23,6 +23,34 @@ export const getAssetsTool: Tool = {
   }
 };
 
+export const registerAssetTool: Tool = {
+  name: 'register_asset',
+  description: 'Register a brand new asset in the system.',
+  parameters: [
+    { name: 'name', type: 'string', description: 'Name of the asset', required: true },
+    { name: 'tag', type: 'string', description: 'Unique Asset Tag (e.g., AF-1234)', required: true },
+    { name: 'category', type: 'string', description: 'Asset category (e.g. Electronics, Furniture)', required: true },
+    { name: 'location', type: 'string', description: 'Physical location of the asset', required: true },
+    { name: 'purchaseDate', type: 'string', description: 'ISO string of purchase date', required: true },
+    { name: 'purchasePrice', type: 'number', description: 'Cost of the asset', required: true },
+    { name: 'isBookable', type: 'boolean', description: 'Can this asset be booked by time-slots?', required: false }
+  ],
+  execute: async (args: any) => {
+    return prisma.asset.create({
+      data: {
+        name: args.name,
+        tag: args.tag,
+        category: args.category,
+        location: args.location,
+        purchaseDate: new Date(args.purchaseDate),
+        purchasePrice: parseFloat(args.purchasePrice),
+        isBookable: args.isBookable || false,
+        status: 'AVAILABLE'
+      }
+    });
+  }
+};
+
 export const allocateAssetTool: Tool = {
   name: 'allocate_asset',
   description: 'Allocate an available asset to a user or department.',

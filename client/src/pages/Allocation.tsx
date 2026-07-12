@@ -15,19 +15,13 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import {
-  allocationRecords,
-  transferRequests,
-  assets,
-  users,
-  departments,
-  getUserById,
-  getAssetById,
-  getDeptById,
   formatDate,
   AllocationRecord,
   TransferRequest,
 } from '../data/mockData';
 import { useAuth } from '../context/AuthContext';
+import { useData } from '../context/DataContext';
+import { apiFetch } from '../lib/api';
 
 
 type Tab = 'active' | 'transfers' | 'returns';
@@ -82,13 +76,16 @@ function transferStatusBadge(status: TransferRequest['status']): string {
 }
 
 
-let localAllocations: AllocationRecord[] = allocationRecords.map(r => ({ ...r }));
-let localTransfers: TransferRequest[] = transferRequests.map(t => ({ ...t }));
+
 
 
 export default function AllocationPage() {
   const { user } = useAuth();
-  const isManager = user?.role === 'admin' || user?.role === 'asset_manager';
+  const isManager = user?.role === 'ADMIN' || user?.role === 'ASSET_MANAGER';
+  const { 
+    assets, users, departments, allocations: localAllocations, transfers: localTransfers, 
+    getUserById, getAssetById, getDeptById, refreshData 
+  } = useData();
 
   
   const [activeTab, setActiveTab] = useState<Tab>('active');
@@ -160,7 +157,7 @@ export default function AllocationPage() {
     setShowAllocateModal(true);
   }
 
-  function handleAllocateSubmit() {
+  async function handleAllocateSubmit() {
     const { assetId, userId, departmentId } = allocateForm;
     if (!assetId || !userId || !departmentId) {
       setAllocateError('Asset, User, and Department are required.');
@@ -175,21 +172,21 @@ export default function AllocationPage() {
       setAllocateError('This asset is already allocated. You can raise a Transfer Request instead.');
       return;
     }
-    const newRecord: AllocationRecord = {
-      id: `al${Date.now()}`,
-      assetId,
-      userId,
-      departmentId,
-      allocatedAt: new Date().toISOString().slice(0, 10),
-      expectedReturn: allocateForm.expectedReturn || null,
-      returnedAt: null,
-      condition: 'good',
-      notes: allocateForm.notes,
-      status: 'active',
-    };
-    localAllocations = [newRecord, ...localAllocations];
-    setShowAllocateModal(false);
-    rerender();
+
+    try {
+      await apiFetch('/allocations', {
+        method: 'POST',
+        body: JSON.stringify({
+          assetId, userId, departmentId,
+          expectedReturn: allocateForm.expectedReturn || undefined,
+          notes: allocateForm.notes
+        })
+      });
+      setShowAllocateModal(false);
+      refreshData();
+    } catch (e: any) {
+      setAllocateError(e.message);
+    }
   }
 
   function handleConflictTransfer() {
@@ -217,7 +214,7 @@ export default function AllocationPage() {
     setShowTransferModal(true);
   }
 
-  function handleTransferSubmit() {
+  async function handleTransferSubmit() {
     const { assetId, toUserId } = transferForm;
     if (!assetId || !toUserId) {
       setTransferError('Asset and Target User are required.');
@@ -234,48 +231,30 @@ export default function AllocationPage() {
       setTransferError('The target user already holds this asset.');
       return;
     }
-    const newTransfer: TransferRequest = {
-      id: `tr${Date.now()}`,
-      assetId,
-      fromUserId: allocation.userId,
-      toUserId,
-      requestedBy: user?.id ?? 'u1',
-      requestedAt: new Date().toISOString().slice(0, 10),
-      approvedAt: null,
-      approvedBy: null,
-      status: 'pending',
-      notes: transferForm.notes,
-    };
-    localTransfers = [newTransfer, ...localTransfers];
-    
-    allocation.status = 'transfer_requested';
-    setShowTransferModal(false);
-    rerender();
+
+    try {
+      await apiFetch('/transfers', {
+        method: 'POST',
+        body: JSON.stringify({
+          assetId,
+          toUserId,
+          notes: transferForm.notes
+        })
+      });
+      setShowTransferModal(false);
+      refreshData();
+    } catch (e: any) {
+      setTransferError(e.message);
+    }
   }
 
-  function handleTransferAction(id: string, action: 'approved' | 'rejected') {
-    const tr = localTransfers.find(t => t.id === id);
-    if (!tr) return;
-    tr.status = action;
-    tr.approvedAt = new Date().toISOString().slice(0, 10);
-    tr.approvedBy = user?.id ?? '';
-    if (action === 'approved') {
-      
-      const allocation = localAllocations.find(
-        r => r.assetId === tr.assetId && (r.status === 'active' || r.status === 'overdue' || r.status === 'transfer_requested')
-      );
-      if (allocation) {
-        allocation.userId = tr.toUserId;
-        allocation.status = 'active';
-      }
-    } else {
-      
-      const allocation = localAllocations.find(
-        r => r.assetId === tr.assetId && r.status === 'transfer_requested'
-      );
-      if (allocation) allocation.status = 'active';
+  async function handleTransferAction(id: string, action: 'approved' | 'rejected') {
+    try {
+      await apiFetch(`/transfers/${id}/${action}`, { method: 'POST' });
+      refreshData();
+    } catch (e: any) {
+      alert(e.message);
     }
-    rerender();
   }
 
   
@@ -284,16 +263,18 @@ export default function AllocationPage() {
     setShowReturnModal(true);
   }
 
-  function handleReturnSubmit() {
+  async function handleReturnSubmit() {
     const { allocationId, conditionNotes, condition } = returnForm;
-    const rec = localAllocations.find(r => r.id === allocationId);
-    if (!rec) return;
-    rec.status = 'returned';
-    rec.returnedAt = new Date().toISOString().slice(0, 10);
-    rec.condition = condition;
-    rec.notes = conditionNotes || rec.notes;
-    setShowReturnModal(false);
-    rerender();
+    try {
+      await apiFetch(`/allocations/${allocationId}/return`, {
+        method: 'POST',
+        body: JSON.stringify({ condition, notes: conditionNotes })
+      });
+      setShowReturnModal(false);
+      refreshData();
+    } catch (e: any) {
+      alert(e.message);
+    }
   }
 
  

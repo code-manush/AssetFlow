@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { Sparkles, Send, Bot, User, Zap, BarChart3, Package, Wrench, ArrowLeftRight, Lock } from 'lucide-react';
+import { apiFetch } from '../lib/api';
+import { useAuth } from '../context/AuthContext';
 
 const PREVIEW_FEATURES = [
     { icon: <Package size={20} />, color: '#6366F1', title: 'Asset Intelligence', desc: 'Ask natural language questions about your asset inventory and get instant answers.' },
@@ -31,21 +33,43 @@ export default function AIAssistantPage() {
     const [input, setInput] = useState('');
     const [isTyping, setIsTyping] = useState(false);
 
-    function sendMessage(text: string) {
+    const { user } = useAuth();
+
+    async function sendMessage(text: string) {
         if (!text.trim()) return;
         const userMsg: Message = { id: Date.now(), role: 'user', text };
         setMessages(prev => [...prev, userMsg]);
         setInput('');
         setIsTyping(true);
 
-        setTimeout(() => {
+        try {
+            const res = await apiFetch('/ai/chat', {
+                method: 'POST',
+                body: JSON.stringify({ query: text })
+            });
             const reply: Message = {
                 id: Date.now() + 1, role: 'assistant',
-                text: `🚀 Great question! The AI backend is not yet connected — this is a UI preview. When integrated, I'll analyze your real asset data and provide: actionable insights, predictive forecasts, and intelligent recommendations for: "${text}"`,
+                text: res.message || 'I processed that successfully.',
             };
             setMessages(prev => [...prev, reply]);
+        } catch (err: any) {
+            const reply: Message = {
+                id: Date.now() + 1, role: 'assistant',
+                text: `Error: ${err.message}`,
+            };
+            setMessages(prev => [...prev, reply]);
+        } finally {
             setIsTyping(false);
-        }, 1200);
+        }
+    }
+
+    if (user?.role === 'EMPLOYEE') {
+        return (
+            <div style={{ padding: 40, textAlign: 'center' }}>
+                <h2>Access Denied</h2>
+                <p>The AI Assistant is restricted to administrators and asset managers.</p>
+            </div>
+        );
     }
 
     return (

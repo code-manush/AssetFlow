@@ -1,11 +1,20 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, users, getUserById } from '../data/mockData';
+import { apiFetch } from '../lib/api';
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: 'ADMIN' | 'ASSET_MANAGER' | 'EMPLOYEE';
+  departmentId: string;
+}
 
 interface AuthContextType {
   user: User | null;
-  login: (userId: string) => void;
+  login: (token: string, userData: User) => void;
   logout: () => void;
   isAuthenticated: boolean;
+  loading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -13,34 +22,43 @@ const AuthContext = createContext<AuthContextType>({
   login: () => {},
   logout: () => {},
   isAuthenticated: false,
+  loading: true,
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const saved = localStorage.getItem('af_user_id');
-    if (saved) {
-      const found = getUserById(saved);
-      if (found) setUser(found);
-    }
+    const initAuth = async () => {
+      const token = localStorage.getItem('af_token');
+      if (token) {
+        try {
+          const userData = await apiFetch('/auth/me');
+          setUser(userData);
+        } catch (e) {
+          localStorage.removeItem('af_token');
+        }
+      }
+      setLoading(false);
+    };
+    initAuth();
   }, []);
 
-  const login = (userId: string) => {
-    const found = getUserById(userId);
-    if (found) {
-      setUser(found);
-      localStorage.setItem('af_user_id', userId);
-    }
+  const login = (token: string, userData: User) => {
+    localStorage.setItem('af_token', token);
+    setUser(userData);
   };
 
   const logout = () => {
+    localStorage.removeItem('af_token');
     setUser(null);
-    localStorage.removeItem('af_user_id');
   };
 
+  const isAuthenticated = !!user;
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, login, logout, isAuthenticated, loading }}>
       {children}
     </AuthContext.Provider>
   );
@@ -49,5 +67,3 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 export function useAuth() {
   return useContext(AuthContext);
 }
-
-export { users };

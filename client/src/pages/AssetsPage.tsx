@@ -11,6 +11,8 @@ import {
   getCategoryLabel, formatDate, getInitials,
 } from '../data/mockData';
 import { useAuth } from '../context/AuthContext';
+import { useData } from '../context/DataContext';
+import { apiFetch } from '../lib/api';
 
 // ── Types ──────────────────────────────────────────────────
 type SortKey = 'name' | 'tag' | 'category' | 'status' | 'purchaseDate' | 'purchasePrice';
@@ -46,10 +48,10 @@ export default function AssetsPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const isManager = user?.role === 'admin' || user?.role === 'asset_manager';
+  const isManager = user?.role === 'ADMIN' || user?.role === 'ASSET_MANAGER';
 
   // ── Local asset list ──────────────────────────────────────
-  const [assetList, setAssetList] = useState<Asset[]>(initialAssets.map(a => ({ ...a })));
+  const { assets: assetList, refreshData } = useData();
 
   // ── Filters & sorting ────────────────────────────────────
   const [search, setSearch]             = useState(searchParams.get('q') ?? '');
@@ -117,26 +119,35 @@ export default function AssetsPage() {
     setFormErr('');
   }
 
-  function handleSave() {
+  async function handleSave() {
     if (!form.name.trim() || !form.tag.trim() || !form.location.trim()) {
       setFormErr('Name, Tag and Location are required.');
       return;
     }
-    if (editAsset) {
-      setAssetList(prev => prev.map(a => a.id === editAsset.id ? { ...form, id: editAsset.id } : a));
-      setEditAsset(null);
-    } else {
-      const newAsset: Asset = { ...form, id: `a${Date.now()}` };
-      setAssetList(prev => [newAsset, ...prev]);
-      setShowAdd(false);
+    try {
+      if (editAsset) {
+        await apiFetch(`/assets/${editAsset.id}`, { method: 'PUT', body: JSON.stringify(form) });
+        setEditAsset(null);
+      } else {
+        await apiFetch('/assets', { method: 'POST', body: JSON.stringify(form) });
+        setShowAdd(false);
+      }
+      setFormErr('');
+      await refreshData();
+    } catch (e: any) {
+      setFormErr(e.message);
     }
-    setFormErr('');
   }
 
-  function handleDelete() {
+  async function handleDelete() {
     if (!deleteAsset) return;
-    setAssetList(prev => prev.filter(a => a.id !== deleteAsset.id));
-    setDeleteAsset(null);
+    try {
+      await apiFetch(`/assets/${deleteAsset.id}`, { method: 'DELETE' });
+      setDeleteAsset(null);
+      await refreshData();
+    } catch (e: any) {
+      alert(e.message);
+    }
   }
 
   function clearFilters() {
