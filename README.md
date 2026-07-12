@@ -108,10 +108,19 @@ Open [http://localhost:5173](http://localhost:5173) to view the application in y
 
 ## 🔐 Demo Credentials
 
-You can log in using the following test account:
+You can log in using the following test accounts:
 
+**Admin:**
 - **Email:** `anmolkrj006@gmail.com`
 - **Password:** `anmol`
+
+**Asset Manager:**
+- **Email:** `gauriborse88@gmail.com`
+- **Password:** `manager123` (or the password you set during registration)
+
+**Employee:**
+- **Email:** `manushpatel1414@gmail.com`
+- **Password:** `employee123` (or the password you set during registration)
 
 ## 📜 License
 This project is licensed under the MIT License.
