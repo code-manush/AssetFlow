@@ -116,11 +116,11 @@ You can log in using the following test accounts:
 
 **Asset Manager:**
 - **Email:** `gauriborse88@gmail.com`
-- **Password:** `manager123` (or the password you set during registration)
+- **Password:** `gauri` (or the password you set during registration)
 
 **Employee:**
 - **Email:** `manushpatel1414@gmail.com`
-- **Password:** `employee123` (or the password you set during registration)
+- **Password:** `manush` (or the password you set during registration)
 
 ## 📜 License
 This project is licensed under the MIT License.
