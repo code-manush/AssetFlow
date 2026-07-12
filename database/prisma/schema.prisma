@@ -21,7 +21,8 @@ enum UserStatus {
 model User {
   id    String   @id @default(uuid())
   name  String
-  email String   @unique
+  email    String   @unique
+  userLogin UsersLogin?
   role  UserRole
 
   departmentId String
@@ -43,11 +44,24 @@ model User {
   departmentsManaged  Department[]         @relation("DepartmentHead")
 }
 
+model UsersLogin {
+  id       String @id @default(uuid())
+  email    String @unique
+  password String
+  userId   String @unique
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("users_login")
+}
+
 enum AssetStatus {
   AVAILABLE
   ALLOCATED
+  RESERVED
   MAINTENANCE
+  LOST
   RETIRED
+  DISPOSED
 }
 
 model Asset {
@@ -216,4 +230,36 @@ model Department {
   assets      Asset[]
   allocations AllocationRecord[]
   bookings    Booking[]
+  audits      AuditCycle[]
+}
+
+enum AuditStatus {
+  OPEN
+  CLOSED
+}
+
+model AuditCycle {
+  id           String      @id @default(uuid())
+  title        String
+  startDate    DateTime    @default(now())
+  endDate      DateTime?
+  status       AuditStatus @default(OPEN)
+  departmentId String?
+  department   Department? @relation(fields: [departmentId], references: [id])
+  items        AuditItem[]
+}
+
+enum AuditItemStatus {
+  VERIFIED
+  MISSING
+  DAMAGED
+}
+
+model AuditItem {
+  id           String          @id @default(uuid())
+  auditCycleId String
+  auditCycle   AuditCycle      @relation(fields: [auditCycleId], references: [id], onDelete: Cascade)
+  assetId      String
+  status       AuditItemStatus
+  notes        String?
 }
