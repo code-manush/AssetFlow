@@ -106,15 +106,7 @@ npx prisma studio
 
 Open [http://localhost:5173](http://localhost:5173) to view the application in your browser.
 
-## 🔐 Demo Credentials
 
-The platform is pre-configured with several roles. You can log in using the following demo credentials:
-
-| Role | Email | Password |
-| :--- | :--- | :--- |
-| **Admin** | `alex.rivera@assetflow.io` | `admin123` |
-| **Asset Manager** | `priya.sharma@assetflow.io` | `manager123` |
-| **Employee** | `sara.chen@assetflow.io` | `employee123` |
 
 ## 📜 License
 This project is licensed under the MIT License.
