@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, UserRole, UserStatus, AssetStatus, DepartmentStatus } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -8,8 +8,7 @@ async function main() {
   const dept1 = await prisma.department.create({
     data: {
       name: 'Engineering',
-      head: 'u1',
-      status: 'active',
+      status: DepartmentStatus.ACTIVE,
       budget: 500000,
     }
   });
@@ -17,8 +16,7 @@ async function main() {
   const dept2 = await prisma.department.create({
     data: {
       name: 'Operations',
-      head: 'u2',
-      status: 'active',
+      status: DepartmentStatus.ACTIVE,
       budget: 300000,
     }
   });
@@ -27,21 +25,27 @@ async function main() {
     data: {
       name: 'Alex Rivera',
       email: 'alex.rivera@assetflow.io',
-      role: 'admin',
-      department: dept1.id,
-      status: 'active',
-      joinedAt: '2022-01-15'
+      role: UserRole.ADMIN,
+      departmentId: dept1.id,
+      status: UserStatus.ACTIVE,
+      joinedAt: new Date('2022-01-15T00:00:00Z')
     }
+  });
+
+  // Assign dept head now that user exists
+  await prisma.department.update({
+    where: { id: dept1.id },
+    data: { headId: admin.id }
   });
 
   const employee = await prisma.user.create({
     data: {
       name: 'Sara Chen',
       email: 'sara.chen@assetflow.io',
-      role: 'employee',
-      department: dept1.id,
-      status: 'active',
-      joinedAt: '2023-02-20'
+      role: UserRole.EMPLOYEE,
+      departmentId: dept1.id,
+      status: UserStatus.ACTIVE,
+      joinedAt: new Date('2023-02-20T00:00:00Z')
     }
   });
 
@@ -50,14 +54,14 @@ async function main() {
       name: 'MacBook Pro 16"',
       tag: 'AF-LPT-001',
       category: 'laptop',
-      status: 'allocated',
+      status: AssetStatus.ALLOCATED,
       location: 'Engineering - Floor 3',
-      department: dept1.id,
-      purchaseDate: '2023-01-15',
+      departmentId: dept1.id,
+      purchaseDate: new Date('2023-01-15T00:00:00Z'),
       purchasePrice: 2499,
-      warrantyExpiry: '2026-01-15',
+      warrantyExpiry: new Date('2026-01-15T00:00:00Z'),
       serialNumber: 'SN-MBP-2023-001',
-      assignedTo: employee.id,
+      assignedToId: employee.id,
       isBookable: false
     }
   });

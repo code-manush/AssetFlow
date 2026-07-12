@@ -7,90 +7,213 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum UserRole {
+  ADMIN
+  ASSET_MANAGER
+  EMPLOYEE
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+}
+
 model User {
-  id         String   @id @default(uuid())
-  name       String
-  email      String   @unique
-  role       String   // 'admin' | 'asset_manager' | 'employee'
-  department String
-  status     String   // 'active' | 'inactive'
-  joinedAt   String
+  id    String   @id @default(uuid())
+  name  String
+  email String   @unique
+  role  UserRole
+
+  departmentId String
+  department   Department @relation(fields: [departmentId], references: [id], name: "DepartmentUsers")
+
+  status   UserStatus
+  joinedAt DateTime   @default(now())
+
+  assets              Asset[]              @relation("AssetAssignedTo")
+  allocations         AllocationRecord[]
+  transfersFrom       TransferRequest[]    @relation("TransferFrom")
+  transfersTo         TransferRequest[]    @relation("TransferTo")
+  transfersRequested  TransferRequest[]    @relation("TransferRequestedBy")
+  transfersApproved   TransferRequest[]    @relation("TransferApprovedBy")
+  maintenanceRaised   MaintenanceRequest[] @relation("MaintenanceRaisedBy")
+  maintenanceAssigned MaintenanceRequest[] @relation("MaintenanceAssignedTo")
+  maintenanceApproved MaintenanceRequest[] @relation("MaintenanceApprovedBy")
+  bookings            Booking[]
+  departmentsManaged  Department[]         @relation("DepartmentHead")
+}
+
+enum AssetStatus {
+  AVAILABLE
+  ALLOCATED
+  MAINTENANCE
+  RETIRED
 }
 
 model Asset {
-  id             String   @id @default(uuid())
-  name           String
-  tag            String   @unique
-  category       String
-  status         String   // 'available' | 'allocated' | 'maintenance' | 'retired'
-  location       String
-  department     String?
-  purchaseDate   String
+  id       String      @id @default(uuid())
+  name     String
+  tag      String      @unique
+  category String
+  status   AssetStatus
+  location String
+
+  departmentId String?
+  department   Department? @relation(fields: [departmentId], references: [id])
+
+  purchaseDate   DateTime
   purchasePrice  Float
-  warrantyExpiry String?
+  warrantyExpiry DateTime?
   serialNumber   String?
-  assignedTo     String?
-  isBookable     Boolean  @default(false)
-  notes          String?
+
+  assignedToId String?
+  assignedTo   User?   @relation("AssetAssignedTo", fields: [assignedToId], references: [id])
+
+  isBookable Boolean @default(false)
+  notes      String?
+
+  allocations         AllocationRecord[]
+  transfers           TransferRequest[]
+  maintenanceRequests MaintenanceRequest[]
+  bookings            Booking[]
+}
+
+enum AllocationStatus {
+  ACTIVE
+  OVERDUE
+  RETURNED
+  TRANSFER_REQUESTED
 }
 
 model AllocationRecord {
-  id             String   @id @default(uuid())
-  assetId        String
-  userId         String
-  departmentId   String
-  allocatedAt    String
-  expectedReturn String?
-  returnedAt     String?
+  id      String @id @default(uuid())
+  assetId String
+  asset   Asset  @relation(fields: [assetId], references: [id])
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  departmentId String
+  department   Department @relation(fields: [departmentId], references: [id])
+
+  allocatedAt    DateTime         @default(now())
+  expectedReturn DateTime?
+  returnedAt     DateTime?
   condition      String
-  notes          String
-  status         String   // 'active' | 'overdue' | 'returned' | 'transfer_requested'
+  notes          String?
+  status         AllocationStatus
+}
+
+enum TransferStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 model TransferRequest {
-  id          String   @id @default(uuid())
-  assetId     String
-  fromUserId  String
-  toUserId    String
-  requestedBy String
-  requestedAt String
-  approvedAt  String?
-  approvedBy  String?
-  status      String   // 'pending' | 'approved' | 'rejected'
-  notes       String
+  id      String @id @default(uuid())
+  assetId String
+  asset   Asset  @relation(fields: [assetId], references: [id])
+
+  fromUserId String
+  fromUser   User   @relation("TransferFrom", fields: [fromUserId], references: [id])
+
+  toUserId String
+  toUser   User   @relation("TransferTo", fields: [toUserId], references: [id])
+
+  requestedById String
+  requestedBy   User   @relation("TransferRequestedBy", fields: [requestedById], references: [id])
+
+  requestedAt  DateTime  @default(now())
+  approvedAt   DateTime?
+  approvedById String?
+  approvedBy   User?     @relation("TransferApprovedBy", fields: [approvedById], references: [id])
+
+  status TransferStatus
+  notes  String?
+}
+
+enum MaintenancePriority {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum MaintenanceStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  IN_PROGRESS
+  RESOLVED
 }
 
 model MaintenanceRequest {
-  id         String   @id @default(uuid())
-  assetId    String
-  raisedBy   String
-  assignedTo String?
-  priority   String   // 'critical' | 'high' | 'medium' | 'low'
-  status     String   // 'pending' | 'approved' | 'rejected' | 'in_progress' | 'resolved'
-  issue      String
-  notes      String
-  raisedAt   String
-  resolvedAt String?
-  approvedAt String?
-  approvedBy String?
+  id      String @id @default(uuid())
+  assetId String
+  asset   Asset  @relation(fields: [assetId], references: [id])
+
+  raisedById String
+  raisedBy   User   @relation("MaintenanceRaisedBy", fields: [raisedById], references: [id])
+
+  assignedToId String?
+  assignedTo   User?   @relation("MaintenanceAssignedTo", fields: [assignedToId], references: [id])
+
+  priority MaintenancePriority
+  status   MaintenanceStatus
+  issue    String
+  notes    String?
+
+  raisedAt   DateTime  @default(now())
+  resolvedAt DateTime?
+
+  approvedAt   DateTime?
+  approvedById String?
+  approvedBy   User?     @relation("MaintenanceApprovedBy", fields: [approvedById], references: [id])
+}
+
+enum BookingStatus {
+  UPCOMING
+  ONGOING
+  COMPLETED
+  CANCELLED
 }
 
 model Booking {
-  id           String   @id @default(uuid())
-  assetId      String
-  userId       String
+  id      String @id @default(uuid())
+  assetId String
+  asset   Asset  @relation(fields: [assetId], references: [id])
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
   departmentId String
-  startTime    String
-  endTime      String
-  purpose      String
-  status       String   // 'upcoming' | 'ongoing' | 'completed' | 'cancelled'
-  createdAt    String
+  department   Department @relation(fields: [departmentId], references: [id])
+
+  startTime DateTime
+  endTime   DateTime
+  purpose   String
+  status    BookingStatus
+  createdAt DateTime      @default(now())
+}
+
+enum DepartmentStatus {
+  ACTIVE
+  INACTIVE
 }
 
 model Department {
-  id     String @id @default(uuid())
-  name   String
-  head   String
-  status String // 'active' | 'inactive'
+  id   String @id @default(uuid())
+  name String
+
+  headId String?
+  head   User?   @relation("DepartmentHead", fields: [headId], references: [id])
+
+  status DepartmentStatus
   budget Float
+
+  users       User[]             @relation("DepartmentUsers")
+  assets      Asset[]
+  allocations AllocationRecord[]
+  bookings    Booking[]
 }
