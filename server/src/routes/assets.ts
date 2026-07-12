@@ -32,7 +32,16 @@ router.get('/:id', async (req, res) => {
 // POST /api/assets (ADMIN only)
 router.post('/', requireRole('ADMIN'), async (req, res) => {
   try {
-    const asset = await prisma.asset.create({ data: req.body });
+    const { id, department, assignedTo, allocations, transfers, maintenanceRequests, bookings, audits, ...data } = req.body;
+    if (data.status) data.status = data.status.toUpperCase();
+    if (data.purchaseDate) data.purchaseDate = new Date(data.purchaseDate);
+    if (data.warrantyExpiry) {
+      data.warrantyExpiry = new Date(data.warrantyExpiry);
+    } else {
+      delete data.warrantyExpiry;
+    }
+    
+    const asset = await prisma.asset.create({ data });
     res.status(201).json(asset);
   } catch (err: any) {
     res.status(400).json({ error: err.message });
@@ -42,7 +51,15 @@ router.post('/', requireRole('ADMIN'), async (req, res) => {
 // PUT /api/assets/:id (ADMIN only)
 router.put('/:id', requireRole('ADMIN'), async (req, res) => {
   try {
-    const { id, ...data } = req.body;
+    const { id, department, assignedTo, allocations, transfers, maintenanceRequests, bookings, audits, ...data } = req.body;
+    if (data.status) data.status = data.status.toUpperCase();
+    if (data.purchaseDate) data.purchaseDate = new Date(data.purchaseDate);
+    if (data.warrantyExpiry) {
+      data.warrantyExpiry = new Date(data.warrantyExpiry);
+    } else {
+      delete data.warrantyExpiry;
+    }
+
     const asset = await prisma.asset.update({ where: { id: String(req.params.id) }, data });
     res.json(asset);
   } catch (err: any) {

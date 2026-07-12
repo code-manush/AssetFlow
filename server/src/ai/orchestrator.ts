@@ -1,9 +1,9 @@
 import { registry } from './tools/toolRegistry';
-import { getAssetsTool, allocateAssetTool, registerAssetTool } from './tools/assetTools';
+import { getAssetsTool, allocateAssetTool, registerAssetTool, updateAssetTool, deleteAssetTool } from './tools/assetTools';
 import { bookResourceTool, getBookingsTool } from './tools/bookingTools';
 import { raiseMaintenanceTool, getMaintenanceRequestsTool } from './tools/maintainanceTool';
 import { getAssetUtilizationTool, getOverdueAllocationsTool } from './tools/reportTools';
-import { getUsersTool, getDepartmentsTool } from './tools/userTools';
+import { getUsersTool, getDepartmentsTool, updateUserTool, createDepartmentTool } from './tools/userTools';
 import { createAuditTool, logDiscrepancyTool } from './tools/auditTools';
 import {
   returnAssetTool, approveTransferTool, approveMaintenanceTool,
@@ -20,11 +20,12 @@ import { AuthUser } from '../middleware/auth';
 // Tool sets by role
 const ADMIN_TOOLS = [
   getAssetsTool, allocateAssetTool, returnAssetTool, registerAssetTool,
+  updateAssetTool, deleteAssetTool,
   bookResourceTool, getBookingsTool, createBookingTool,
   raiseMaintenanceTool, getMaintenanceRequestsTool, approveMaintenanceTool, resolveMaintenanceTool,
   approveTransferTool,
   getAssetUtilizationTool, getOverdueAllocationsTool,
-  getUsersTool, getDepartmentsTool,
+  getUsersTool, getDepartmentsTool, updateUserTool, createDepartmentTool,
   createAuditTool, logDiscrepancyTool
 ];
 

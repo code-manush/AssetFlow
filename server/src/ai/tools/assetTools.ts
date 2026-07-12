@@ -85,3 +85,46 @@ export const allocateAssetTool: Tool = {
     return allocation;
   }
 };
+
+export const updateAssetTool: Tool = {
+  name: 'update_asset',
+  description: 'Update an existing asset (e.g. change price, add serial number, update notes, change location).',
+  parameters: [
+    { name: 'tag', type: 'string', description: 'Unique Asset Tag to identify the asset (e.g., AF-LPT-100)', required: true },
+    { name: 'price', type: 'number', description: 'New purchase price', required: false },
+    { name: 'serialNumber', type: 'string', description: 'New serial number', required: false },
+    { name: 'location', type: 'string', description: 'New location', required: false },
+    { name: 'status', type: 'string', description: 'New status', required: false },
+    { name: 'notes', type: 'string', description: 'Notes about the asset', required: false }
+  ],
+  execute: async (args: any) => {
+    const data: any = {};
+    if (args.price !== undefined) data.purchasePrice = parseFloat(args.price);
+    if (args.serialNumber !== undefined) data.serialNumber = args.serialNumber;
+    if (args.location !== undefined) data.location = args.location;
+    if (args.status !== undefined) data.status = args.status.toUpperCase();
+    if (args.notes !== undefined) data.notes = args.notes;
+
+    if (Object.keys(data).length === 0) {
+      throw new Error('No fields provided to update.');
+    }
+
+    const asset = await prisma.asset.update({
+      where: { tag: args.tag },
+      data
+    });
+    return asset;
+  }
+};
+
+export const deleteAssetTool: Tool = {
+  name: 'delete_asset',
+  description: 'Delete an asset completely from the database.',
+  parameters: [
+    { name: 'tag', type: 'string', description: 'Unique Asset Tag to identify the asset', required: true }
+  ],
+  execute: async (args: any) => {
+    await prisma.asset.delete({ where: { tag: args.tag } });
+    return { success: true, message: `Asset ${args.tag} deleted successfully.` };
+  }
+};
