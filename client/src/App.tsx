@@ -14,6 +14,8 @@ import AssetDetailPage from './pages/AssetDetailPage';
 import AllocationPage from './pages/Allocation';
 import MaintenancePage from './pages/Maintenance';
 import ResourceBooking from './pages/ResourceBooking';
+import ReportsPage from './pages/ReportsPage';
+import SettingsPage from './pages/SettingsPage';
 import { RouteIcon } from 'lucide-react';
 import AIAssistantPage from './pages/AIAssistantPage';
 
@@ -37,6 +39,8 @@ export default function App() {
               <Route path="/allocation" element={<AllocationPage />} />
               <Route path="/maintenance" element={<MaintenancePage />} />
               <Route path="/booking" element={<ResourceBooking />} />
+              <Route path="/reports" element={<ReportsPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
 
             </Route>
 

@@ -17,8 +17,8 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const [isSignUp, setIsSignUp] = useState(false);
   const [name, setName] = useState('');
-  const [email, setEmail] = useState('alex.rivera@assetflow.io');
-  const [password, setPassword] = useState('admin123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -99,6 +99,7 @@ export default function LoginPage() {
                   value={name}
                   onChange={e => setName(e.target.value)}
                   required
+                  placeholder="Enter your full name"
                   style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-elevated)', color: 'var(--text-primary)', outline: 'none' }}
                 />
               </div>
@@ -110,6 +111,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 required
+                placeholder="Enter your email"
                 style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-elevated)', color: 'var(--text-primary)', outline: 'none' }}
               />
             </div>
@@ -120,6 +122,7 @@ export default function LoginPage() {
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 required
+                placeholder="Enter your password"
                 style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-elevated)', color: 'var(--text-primary)', outline: 'none' }}
               />
             </div>
@@ -145,13 +148,6 @@ export default function LoginPage() {
             >
               {isSignUp ? 'Sign In' : 'Sign Up'}
             </button>
-          </div>
-
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', background: 'var(--bg-elevated)', padding: 12, borderRadius: 8 }}>
-            <p style={{ marginBottom: 6, fontWeight: 600, color: 'var(--text-primary)' }}>Demo Credentials:</p>
-            <p>Admin: alex.rivera@assetflow.io / admin123</p>
-            <p>Manager: priya.sharma@assetflow.io / manager123</p>
-            <p>Employee: sara.chen@assetflow.io / employee123</p>
           </div>
         </div>
       </div>
