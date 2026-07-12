@@ -1,0 +1,96 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String   @id @default(uuid())
+  name       String
+  email      String   @unique
+  role       String   // 'admin' | 'asset_manager' | 'employee'
+  department String
+  status     String   // 'active' | 'inactive'
+  joinedAt   String
+}
+
+model Asset {
+  id             String   @id @default(uuid())
+  name           String
+  tag            String   @unique
+  category       String
+  status         String   // 'available' | 'allocated' | 'maintenance' | 'retired'
+  location       String
+  department     String?
+  purchaseDate   String
+  purchasePrice  Float
+  warrantyExpiry String?
+  serialNumber   String?
+  assignedTo     String?
+  isBookable     Boolean  @default(false)
+  notes          String?
+}
+
+model AllocationRecord {
+  id             String   @id @default(uuid())
+  assetId        String
+  userId         String
+  departmentId   String
+  allocatedAt    String
+  expectedReturn String?
+  returnedAt     String?
+  condition      String
+  notes          String
+  status         String   // 'active' | 'overdue' | 'returned' | 'transfer_requested'
+}
+
+model TransferRequest {
+  id          String   @id @default(uuid())
+  assetId     String
+  fromUserId  String
+  toUserId    String
+  requestedBy String
+  requestedAt String
+  approvedAt  String?
+  approvedBy  String?
+  status      String   // 'pending' | 'approved' | 'rejected'
+  notes       String
+}
+
+model MaintenanceRequest {
+  id         String   @id @default(uuid())
+  assetId    String
+  raisedBy   String
+  assignedTo String?
+  priority   String   // 'critical' | 'high' | 'medium' | 'low'
+  status     String   // 'pending' | 'approved' | 'rejected' | 'in_progress' | 'resolved'
+  issue      String
+  notes      String
+  raisedAt   String
+  resolvedAt String?
+  approvedAt String?
+  approvedBy String?
+}
+
+model Booking {
+  id           String   @id @default(uuid())
+  assetId      String
+  userId       String
+  departmentId String
+  startTime    String
+  endTime      String
+  purpose      String
+  status       String   // 'upcoming' | 'ongoing' | 'completed' | 'cancelled'
+  createdAt    String
+}
+
+model Department {
+  id     String @id @default(uuid())
+  name   String
+  head   String
+  status String // 'active' | 'inactive'
+  budget Float
+}
