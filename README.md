@@ -106,7 +106,12 @@ npx prisma studio
 
 Open [http://localhost:5173](http://localhost:5173) to view the application in your browser.
 
+## 🔐 Demo Credentials
 
+You can log in using the following test account:
+
+- **Email:** `anmolkrj006@gmail.com`
+- **Password:** `anmol`
 
 ## 📜 License
 This project is licensed under the MIT License.
