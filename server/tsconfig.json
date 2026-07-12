@@ -1,21 +1,22 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
-    "module": "CommonJS",
-    "moduleResolution": "node",
-
-    "rootDir": "./src", 
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "rootDir": "./src",
     "outDir": "./dist",
-
     "strict": true,
-
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
-
-  "include": ["src"],
-  "exclude": ["node_modules", "dist"]
+  ,
+  "../../ai""include": [
+    "src"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
 }
