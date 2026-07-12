@@ -3,8 +3,6 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Search,
   Bell,
-  Sun,
-  Moon,
   ChevronRight,
   Package,
   Wrench,
@@ -15,7 +13,7 @@ import {
   Settings,
   LayoutDashboard,
 } from 'lucide-react';
-import { useTheme } from '../../context/ThemeContext';
+import ThemeToggle from '../ThemeToggle';
 
 const ROUTE_LABELS: Record<string, { label: string; icon: React.ReactNode }> = {
   '/dashboard':  { label: 'Dashboard',        icon: <LayoutDashboard size={14} /> },
@@ -35,7 +33,6 @@ const NOTIFICATIONS = [
 ];
 
 export default function Header() {
-  const { theme, toggleTheme } = useTheme();
   const location = useLocation();
   const navigate = useNavigate();
   const [showNotifs, setShowNotifs] = useState(false);
@@ -83,14 +80,7 @@ export default function Header() {
       {/* Actions */}
       <div className="header-actions">
         {/* Theme toggle */}
-        <button
-          className="icon-btn"
-          onClick={toggleTheme}
-          data-tooltip={theme === 'dark' ? 'Light mode' : 'Dark mode'}
-          aria-label="Toggle theme"
-        >
-          {theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
-        </button>
+        <ThemeToggle />
 
         {/* Notifications */}
         <div style={{ position: 'relative' }}>

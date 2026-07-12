@@ -6,6 +6,7 @@ import { DataProvider } from './context/DataContext';
 import AppLayout from './components/layout/AppLayout';
 
 // Pages
+import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import Dashboard from './pages/Dashboard';
 import AssetsPage from './pages/AssetsPage';
@@ -24,11 +25,11 @@ export default function App() {
         <BrowserRouter>
           <Routes>
             {/* Public */}
+            <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
 
             {/* Protected — inside AppLayout */}
             <Route element={<DataProvider><AppLayout /></DataProvider>}>
-              <Route index element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/ai" element={<AIAssistantPage />} />
               <Route path="/assets" element={<AssetsPage />} />
@@ -40,7 +41,7 @@ export default function App() {
             </Route>
 
             {/* Fallback */}
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </BrowserRouter>
       </AuthProvider>

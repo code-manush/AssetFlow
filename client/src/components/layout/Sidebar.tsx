@@ -57,9 +57,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
     <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
       {/* Logo */}
       <div className="sidebar-logo">
-        <div className="sidebar-logo-icon">
-          <Zap size={16} color="white" />
-        </div>
+        <img src="/AssetFlow.png" alt="AssetFlow Logo" style={{ width: 24, height: 24, borderRadius: 6 }} />
         <span className="sidebar-logo-text">AssetFlow</span>
       </div>
 

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Zap, Package, BarChart3, Wrench, Sparkles, LogIn } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { apiFetch } from '../lib/api';
+import ThemeToggle from '../components/ThemeToggle';
 
 const FEATURES = [
   { icon: <Package size={20} />, label: 'Asset Registry', desc: 'Track every asset lifecycle', color: '#6366F1' },
@@ -43,14 +44,15 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="login-page">
+    <div className="login-page" style={{ position: 'relative' }}>
+      <ThemeToggle style={{ position: 'absolute', top: 24, right: 24, zIndex: 100 }} />
       <div className="login-bg-glow" style={{ background: 'rgba(99,102,241,0.12)', top: '-200px', left: '-200px' }} />
       <div className="login-bg-glow" style={{ background: 'rgba(168,85,247,0.08)', bottom: '-200px', right: '-100px' }} />
 
       <div className="login-left">
         <div style={{ maxWidth: 460, width: '100%' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 48 }}>
-            <div className="login-logo-icon"><Zap size={22} color="white" /></div>
+            <img src="/AssetFlow.png" alt="AssetFlow Logo" style={{ width: 36, height: 36, borderRadius: 8 }} />
             <span className="login-logo-text">AssetFlow</span>
           </div>
 

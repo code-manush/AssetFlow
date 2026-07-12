@@ -7,7 +7,7 @@ import { getDeptById, getInitials } from '../data/mockData';
 export default function SettingsPage() {
     const { user } = useAuth();
     const { theme, toggleTheme } = useTheme();
-    const dept = getDeptById(user?.department ?? '');
+    const dept = getDeptById(user?.departmentId ?? '');
     const [saved, setSaved] = useState(false);
     const [notifs, setNotifs] = useState({ maintenance: true, allocations: true, overdue: true, bookings: false });
 
@@ -44,7 +44,7 @@ export default function SettingsPage() {
                         <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)' }}>{user?.name}</div>
                         <div style={{ fontSize: '0.83rem', color: 'var(--text-muted)', marginTop: 2 }}>{user?.email}</div>
                         <div style={{ marginTop: 8 }}>
-                            <span className={`badge ${user?.role === 'admin' ? 'badge-active' : user?.role === 'asset_manager' ? 'badge-allocated' : 'badge-pending'}`}>
+                            <span className={`badge ${user?.role === 'ADMIN' ? 'badge-active' : user?.role === 'ASSET_MANAGER' ? 'badge-allocated' : 'badge-pending'}`}>
                                 {user?.role?.replace('_', ' ') ?? 'Unknown'}
                             </span>
                         </div>
